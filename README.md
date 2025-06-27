@@ -4,7 +4,7 @@ This project is a sophisticated, full-stack conversational AI chatbot built with
 
 The application features a user-friendly web interface built with Streamlit and maintains conversational memory, allowing for natural, multi-turn follow-up questions.
 
-![Chatbot Demo](https://storage.googleapis.com/garden-prod/doc-images/image_a17939.png-c9a3f34b-5e60-46b3-b726-b4e45eed5fa4)
+![Chatbot Demo](https://conversational-ai-rag-chatbot-fwuwydrqbyapeya8l2ea8u.streamlit.app/)
 
 ---
 
