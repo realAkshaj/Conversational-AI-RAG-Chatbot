@@ -1,115 +1,73 @@
-import os
-from dotenv import load_dotenv
+# main.py (Upgraded with Conversational Memory)
 
-# Import LangChain components
 from langchain_community.vectorstores import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import RetrievalQA
-
-# Import our document ingestion function from the other file
-from ingest import load_and_split_documents
-
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
 from chromadb.config import Settings
 
-# Load environment variables from .env file
-load_dotenv()
-
-# --- Configuration ---
+# --- Configuration (remains the same) ---
 CHROMA_DB_PATH = "chroma/"
-DOCUMENT_PATH = "documents/"
-
-# This dictionary contains the settings for ChromaDB.
-# By setting anonymized_telemetry to False, we disable the telemetry collection.
 CHROMA_SETTINGS = Settings(
     anonymized_telemetry=False,
     is_persistent=True,
 )
 
-
-def main():
+def load_conversational_chain():
     """
-    Main function to set up and run the RAG-based QA chatbot.
-    """
-    # --- 1. SETUP EMBEDDING MODEL & VECTOR DATABASE ---
+    Loads and initializes a conversational RAG chain with memory.
 
-    print("Setting up Gemini embedding model...")
+    Returns:
+        ConversationalRetrievalChain: The initialized conversational chain.
+    """
+    # Load the embedding model
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
-    # This part for creating/loading the DB is correct and doesn't need changes.
-    if not os.path.exists(CHROMA_DB_PATH):
-        print(f"No existing vector database found. Creating a new one at: {CHROMA_DB_PATH}")
-        chunks = load_and_split_documents()
-        if not chunks:
-            print("Shutting down, no documents to process.")
-            return
-        db = Chroma.from_documents(
-            chunks,
-            embeddings,
-            persist_directory=CHROMA_DB_PATH,
-            client_settings=CHROMA_SETTINGS
-        )
-        print("Successfully created and persisted the vector database.")
-    else:
-        print(f"Loading existing vector database from: {CHROMA_DB_PATH}")
-        db = Chroma(
-            persist_directory=CHROMA_DB_PATH,
-            embedding_function=embeddings,
-            client_settings=CHROMA_SETTINGS
-        )
-
-    # --- 2. SETUP RETRIEVER, LLM, AND QA CHAIN ---
-
-    retriever = db.as_retriever(search_kwargs={"k": 3})
-
-    # Instantiate the Gemini Pro chat model with the updated name and removed argument
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash-latest",  # <--- CHANGE HERE: Use the latest model name
-        temperature=0.3
-    )  # <--- CHANGE HERE: Removed the deprecated 'convert_system_message_to_human'
-
-    template = """
-    You are a helpful assistant. Use the following pieces of context to answer the question at the end.
-    If you don't know the answer from the context provided, just say that you don't know. Do not try to make up an answer.
-    Keep the answer concise.
-
-    Context: {context}
-
-    Question: {question}
-
-    Helpful Answer:
-    """
-    QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
-
-    qa_chain = RetrievalQA.from_chain_type(
-        llm,
-        retriever=retriever,
-        return_source_documents=True,
-        chain_type_kwargs={"prompt": QA_CHAIN_PROMPT}
+    # Load the existing vector database
+    db = Chroma(
+        persist_directory=CHROMA_DB_PATH,
+        embedding_function=embeddings,
+        client_settings=CHROMA_SETTINGS
     )
 
-    # --- 3. INTERACTIVE QUESTION-ANSWERING LOOP ---
+    # Create a retriever
+    retriever = db.as_retriever()
 
-    print("\n--- Chatbot is ready! ---")
-    print("Type 'exit' to quit.")
-    while True:
-        query = input("\nAsk a question: ")
-        if query.lower() == "exit":
-            break
+    # Create the LLM
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash-latest",
+        temperature=0.5  # Slightly more creative for conversation
+    )
 
-        # Run the QA chain with the user's query using the modern .invoke() method
-        result = qa_chain.invoke(query)  # <--- CHANGE HERE: Use .invoke() instead of .__call__()
+    # Set up memory
+    # "chat_history" is where the memory will store messages.
+    # "return_messages=True" ensures the history is a list of message objects.
+    memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        return_messages=True
+    )
 
-        print("\nAnswer:", result["result"])
+    # Create and return the Conversational Retrieval Chain
+    # This chain is designed to use a retriever and memory to hold a conversation.
+    chain = ConversationalRetrievalChain.from_llm(
+        llm=llm,
+        retriever=retriever,
+        memory=memory
+    )
+    return chain
 
-        print("\nSources:")
-        for doc in result["source_documents"]:
-            # Use .get() for safer dictionary access
-            source = doc.metadata.get('source', 'Unknown')
-            page = doc.metadata.get('page', 'N/A')
-            print(f"- {source}, page {page}")
+def process_conversational_query(chain, query, chat_history):
+    """
+    Processes a user query using the conversational chain.
 
+    Args:
+        chain (ConversationalRetrievalChain): The conversational chain.
+        query (str): The user's question.
+        chat_history (list): The list of past messages.
 
-if __name__ == "__main__":
-    main()
+    Returns:
+        dict: The result from the conversational chain.
+    """
+    result = chain.invoke({"question": query, "chat_history": chat_history})
+    return result
