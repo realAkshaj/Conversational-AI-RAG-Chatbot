@@ -1,5 +1,11 @@
 # Conversational AI Document Chatbot with RAG and Gemini
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://conversational-ai-rag-chatbot-fwuwydrqbyapeya8l2ea8u.streamlit.app/)
+
+**[► View the Live Demo](https://conversational-ai-rag-chatbot-fwuwydrqbyapeya8l2ea8u.streamlit.app/)**
+
+---
+
 This project is a sophisticated, full-stack conversational AI chatbot built with Python, LangChain, and Google's Gemini models. It uses a Retrieval-Augmented Generation (RAG) architecture to answer questions about a specific set of documents, ensuring that its responses are accurate, context-aware, and grounded in the provided source material.
 
 The application features a user-friendly web interface built with Streamlit and maintains conversational memory, allowing for natural, multi-turn follow-up questions.
@@ -25,7 +31,7 @@ The application features a user-friendly web interface built with Streamlit and 
 The application follows a modular, multi-stage process:
 
 1.  **Data Ingestion & Indexing (Offline):**
-    * The `build_db.py` script loads documents (e.g., PDFs) from the `documents/` directory.
+    * The `knowledge_base.py` script loads documents (e.g., PDFs) from the `documents/` directory.
     * Documents are split into smaller, manageable chunks.
     * Each chunk is converted into a numerical vector (embedding) using the Gemini embedding model.
     * These embeddings are stored and indexed in a local ChromaDB vector database, creating a persistent knowledge base.
@@ -52,15 +58,17 @@ The application follows a modular, multi-stage process:
 
 ---
 
-## How to Run This Project Locally
+## How to Run This Project
 
-### Prerequisites
+### Local Development
+
+#### Prerequisites
 
 -   Python 3.9+
 -   Git
 -   A Google API key with the Gemini API enabled.
 
-### Setup Instructions
+#### Setup Instructions
 
 1.  **Clone the Repository:**
     ```bash
@@ -85,11 +93,12 @@ The application follows a modular, multi-stage process:
     pip install -r requirements.txt
     ```
 
-4.  **Set Up Your Environment Variables:**
-    -   Create a file named `.env` in the project root.
-    -   Add your Google API key to the file:
-        ```
-        GOOGLE_API_KEY="YOUR_API_KEY_HERE"
+4.  **Set Up Local API Keys (Secrets):**
+    -   Create a directory named `.streamlit` in the project root.
+    -   Inside the `.streamlit` directory, create a file named `secrets.toml`.
+    -   Add your Google API key to this file in the following format:
+        ```toml
+        GOOGLE_API_KEY = "YOUR_API_KEY_HERE"
         ```
 
 5.  **Add Your Documents:**
@@ -106,3 +115,19 @@ The application follows a modular, multi-stage process:
     streamlit run app.py
     ```
     Your browser should automatically open with the running chat application.
+
+### Deployment on Streamlit Cloud
+
+1.  **Push to GitHub:** Ensure your repository is up-to-date with the latest code.
+2.  **Sign up for Streamlit Community Cloud:** Use your GitHub account to sign up.
+3.  **Deploy New App:**
+    -   Click "New app" from your workspace.
+    -   Select your repository and the `main` branch.
+    -   Ensure the "Main file path" is `app.py`.
+4.  **Add Your Secrets:**
+    -   After clicking "Deploy!", immediately go to the app's settings (Manage app -> Settings -> Secrets).
+    -   Paste your `GOOGLE_API_KEY` in the secrets manager using the same format as your local `secrets.toml` file:
+        ```toml
+        GOOGLE_API_KEY = "YOUR_API_KEY_HERE"
+        ```
+    -   Save the secret. The app will reboot and use this key to connect to the Google API.
