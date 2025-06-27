@@ -98,7 +98,7 @@ The application follows a modular, multi-stage process:
 6.  **Build the Knowledge Base:**
     -   Run the ingestion script once to create your vector database.
     ```bash
-    python build_db.py
+    python knowledge_base.py
     ```
 
 7.  **Run the Web Application:**
