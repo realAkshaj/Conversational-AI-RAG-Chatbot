@@ -1,0 +1,24 @@
+# Python virtual environment
+venv/
+.venv/
+
+# PyCharm specific files
+.idea/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+# IMPORTANT: This file should contain your secret API keys.
+.env
+
+# ChromaDB local vectorstore
+# This can be large and is specific to your machine.
+chroma/
+
+# Operating System files
+.DS_Store
+Thumbs.db
