@@ -1,4 +1,11 @@
 # main.py (Upgraded with Conversational Memory)
+# --- START: CHROMA DB DEPLOYMENT FIX ---
+# This is a workaround for a known issue with ChromaDB on certain environments,
+# including Streamlit Cloud. It forces ChromaDB to use the correct sqlite3 library.
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# --- END: CHROMA DB DEPLOYMENT FIX --
 
 from langchain_community.vectorstores import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
