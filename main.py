@@ -1,9 +1,14 @@
 # main.py
 
-# --- START: CHROMA DB DEPLOYMENT FIX ---
-__import__('pysqlite3')
 import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
+# --- START: CHROMA DB DEPLOYMENT FIX ---
+# This is a workaround for a known issue with ChromaDB on certain environments,
+# including Linux-based Streamlit Cloud.
+# We check the platform and only apply thegit a fix if it's Linux.
+if sys.platform == "linux":
+    __import__('pysqlite3')
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 # --- END: CHROMA DB DEPLOYMENT FIX ---
 
 from langchain_community.vectorstores import Chroma
